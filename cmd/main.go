@@ -24,7 +24,8 @@ func main() {
 	MONGO_URI := os.Getenv("MONGO_URI")
 	// greeting
 	log.Println("starting server ...")
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	// setup mongo connect
 	mongodb.SetUpConnect(MONGO_URI, ctx)
 	mongodb.MONGO_COLLECTION = os.Getenv("MONGO_COLLECTION")

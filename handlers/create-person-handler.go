@@ -16,7 +16,8 @@ func CreatePersonHandler(w http.ResponseWriter, req *http.Request) {
 	_ = json.NewDecoder(req.Body).Decode(&person)
 	fmt.Println(person, mongodb.MONGO_COLLECTION, mongodb.MONGO_DATABASE)
 	collection := mongodb.Client.Database(mongodb.MONGO_DATABASE).Collection(mongodb.MONGO_COLLECTION)
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	result, _ := collection.InsertOne(ctx, person)
 	json.NewEncoder(w).Encode(result)
 }

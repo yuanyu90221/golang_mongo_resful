@@ -16,7 +16,8 @@ func DeletePersonHandler(w http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	collection := mongodb.Client.Database(mongodb.MONGO_DATABASE).Collection(mongodb.MONGO_COLLECTION)
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	result, _ := collection.DeleteOne(ctx, dtos.Person{ID: id})
 	json.NewEncoder(w).Encode(result)
 }

@@ -19,7 +19,8 @@ func GetPersonHandler(w http.ResponseWriter, req *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	var person dtos.Person
 	collection := mongodb.Client.Database(mongodb.MONGO_DATABASE).Collection(mongodb.MONGO_COLLECTION)
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 	err := collection.FindOne(ctx, dtos.Person{ID: id}).Decode(&person)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

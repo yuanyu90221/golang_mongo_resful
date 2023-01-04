@@ -15,7 +15,8 @@ func GetPeopleHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("content-type", "application/json")
 	var people []dtos.Person
 	collection := mongodb.Client.Database(mongodb.MONGO_DATABASE).Collection(mongodb.MONGO_COLLECTION)
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 	cursor, err := collection.Find(ctx, bson.M{})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
