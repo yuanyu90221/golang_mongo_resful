@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -36,6 +38,28 @@ func main() {
 	router.HandleFunc("/person/{id}", handlers.GetPersonHandler).Methods("GET")
 	router.HandleFunc("/person", handlers.CreatePersonHandler).Methods("POST")
 	router.HandleFunc("/person/{id}", handlers.DeletePersonHandler).Methods("DELETE")
-	fmt.Printf("server listen on %s\n", PORT)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", PORT), router))
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%s", PORT),
+		Handler: router,
+	}
+	// setup handle to goroutine
+	go func() {
+		// log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", PORT), router))
+		log.Printf("Server listen on %s", PORT)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+	// make channel for listen on os.Signal and setup notify signal
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutdown Server ...")
+	// setup withTimeout to preserve connection before close
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server Shutdown: %s", err)
+	}
+	log.Println("Server exiting")
 }
